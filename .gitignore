@@ -1,0 +1,10 @@
+
+.idea/
+
+_skbuild/
+
+.directory
+
+*.so
+
+cmake-build-*/
