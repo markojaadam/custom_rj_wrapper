@@ -9,7 +9,6 @@ cdef class PyRequest:
     def __cinit__(self):
         self.thisptr = new c_messaging.ClientRequest()
 
-
     def __dealloc__(self):
         del self.thisptr
 
@@ -97,5 +96,4 @@ def test(int n_cycles, int n_workers):
         t.join()
 
     elapsed = time.time() - start_time
-    print("Elapsed: %.2f sec" % elapsed)
-    print("%.0d ns/op" % (elapsed / n_cycles * 10 ** 9))
+    return elapsed
