@@ -41,7 +41,7 @@ const rapidjson::Value& ClientRequest::getParameter(const std::string_view name)
     return i->value;
 }
 
-int32_t ClientRequest::getIntParameter(const std::string_view name) const noexcept {
+int ClientRequest::getIntParameter(const std::string_view name) const noexcept {
   const auto nameRef = rapidjson::StringRef(name.data(), name.size());
   const auto i = paramsMember().FindMember(nameRef);
   const auto e = paramsMember().MemberEnd();

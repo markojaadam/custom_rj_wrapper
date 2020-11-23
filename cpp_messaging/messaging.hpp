@@ -51,7 +51,7 @@ public:
   int method;
   int seq;
   const rapidjson::Value &getParameter(std::string_view name) const noexcept;
-  int32_t getIntParameter(std::string_view name) const noexcept;
+  int getIntParameter(std::string_view name) const noexcept;
   void read(const char *message);
 
 private:
