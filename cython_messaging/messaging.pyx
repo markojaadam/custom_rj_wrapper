@@ -42,11 +42,7 @@ cdef class PyRequest:
 import time
 import threading
 
-cdef int n_cycles = 1000000
-cdef int n_workers = 4
-cdef int n_per_worker = int(n_cycles / n_workers)
-
-def worker():
+def worker(int cycles):
     cdef string testdata = b"""{
         "method": 10000,
             "seq": 3,
@@ -84,15 +80,15 @@ def worker():
     cdef string test_param = b"test_param_4"
     cdef PyRequest req = PyRequest()
     with nogil:
-        for i in range(n_per_worker):
+        for i in range(cycles):
             req.read(testdata.c_str())
             req.getIntParameter(test_param)
 
-def test():
+def test(int n_cycles, int n_workers):
     start_time = time.time()
     threads = []
     for i in range(n_workers):
-        t = threading.Thread(target=worker, daemon=True)
+        t = threading.Thread(target=worker, args=[int(n_cycles / n_workers)], daemon=True)
         threads.append(t)
 
     for t in threads:
