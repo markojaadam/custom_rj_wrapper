@@ -1,5 +1,5 @@
 #include "rapidjson.hpp"
-#include "wrapper.cpp"
+#include "messaging.cpp"
 #include <chrono>
 #include <iostream>
 
@@ -39,18 +39,13 @@ int main() {
     }
   }
 )";
-
-  ClientRequest request;
-  request.read(msg);
-  std::cout << request.getParameter("test_param_3").GetString() << std::endl;
   using namespace std::chrono;
   auto start = high_resolution_clock::now();
   int n_cycles = 1000000;
 
   for (int i = 1; i < n_cycles; i++) {
-    rapidjson::Document doc{rapidjson::Type::kObjectType};
-    doc.Parse(msg);
-    auto request = ClientRequest{};
+    ClientRequest request;
+    request.read(msg);
     request.getParameter("test_param_1");
     request.getParameter("test_param_2");
     request.getParameter("test_param_3");

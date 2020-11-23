@@ -1,7 +1,10 @@
-# from messaging.messaging import new_req_from_msg, str_test
-from messaging.messaging import PyRequest
+#include "rapidjson.hpp"
+#include "messaging.cpp"
+#include <chrono>
+#include <iostream>
 
-testdata = """{
+int main() {
+  constexpr const char *msg = R"({
     "method": 10000,
         "seq": 3,
         "params": {
@@ -34,8 +37,13 @@ testdata = """{
         }
       }
     }
-  }"""
+  }
+)";
 
-req = PyRequest()
-req.read(testdata.encode())
-print(req.method)
+  ClientRequest request;
+  request.read(msg);
+  std::cout << request.getParameter("test_param_1").GetBool() << std::endl;
+  std::cout << request.getParameter("test_param_3").GetString() << std::endl;
+  std::cout << request.getParameter("test_param_4").GetInt() << std::endl;
+  std::cout << request.getIntParameter("test_param_4") << std::endl;
+}

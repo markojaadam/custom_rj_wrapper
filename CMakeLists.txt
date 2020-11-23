@@ -1,33 +1,31 @@
 cmake_minimum_required(VERSION 3.15)
-project(wrapper)
+project(custom_rj_wrapper)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(PythonExtensions REQUIRED)
 find_package(Cython REQUIRED)
 
 add_compile_definitions(RAPIDJSON_NO_SIZETYPEDEFINE=1)
-set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cpp_wrapper/rapidjson/include")
-include_directories(BEFORE "${RAPIDJSON_INCLUDE_DIR}" )
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cpp_messaging/rapidjson/include")
+message("${RAPIDJSON_INCLUDE_DIR}")
+include_directories(BEFORE "${RAPIDJSON_INCLUDE_DIR}")
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
+set(CPP_MODULE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cpp_messaging")
+set(CYTHON_MODULE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cython_messaging")
 
-set(CPP_WRAPPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cpp_wrapper")
-# set(CPP_WRAPPER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cpp_wrapper/include")
 include_directories(BEFORE
-        "${CPP_WRAPPER_INCLUDE_DIR}"
+        "${RAPIDJSON_INCLUDE_DIR}"
         )
-add_subdirectory("${CPP_WRAPPER_INCLUDE_DIR}")
 
-add_library(cpp_wrapper MODULE cpp_wrapper/wrapper.cpp)
-python_extension_module(cpp_wrapper)
-install(TARGETS cpp_wrapper LIBRARY DESTINATION cpp_wrapper)
+include_directories(BEFORE
+        "${CPP_MODULE_INCLUDE_DIR}"
+        )
 
-add_cython_target(primes CXX)
-add_library(primes MODULE ${primes})
-python_extension_module(primes)
+include_directories(BEFORE
+        "${CYTHON_MODULE_INCLUDE_DIR}"
+        )
 
-add_cython_target(messaging CXX)
-add_library(messaging MODULE ${messaging})
-python_extension_module(messaging)
+add_subdirectory("${CPP_MODULE_INCLUDE_DIR}")
+add_subdirectory("${CYTHON_MODULE_INCLUDE_DIR}")
 
-install(TARGETS primes LIBRARY DESTINATION primes)
-install(TARGETS messaging LIBRARY DESTINATION messaging)
+target_link_libraries(messaging cpp-module-static)

@@ -2,7 +2,7 @@
 // Created by adam on 2020. 11. 20..
 //
 
-#include "wrapper.hpp"
+#include "messaging.hpp"
 #include "rapidjson.hpp"
 
 rapidjson::Value &ServerResponse::paramsMember() noexcept {
@@ -27,6 +27,10 @@ void ServerResponse::setParameter(std::string param, rapidjson::Value value) {
   setMember(paramsMember(), param, std::move(value), document.GetAllocator());
 }
 
+void ServerResponse::setIntParameter(std::string param, int32_t intValue){
+  setMember(paramsMember(), param, std::move(rapidjson::Value{intValue}), document.GetAllocator());
+}
+
 const rapidjson::Value& ClientRequest::getParameter(const std::string_view name) const noexcept {
   const auto nameRef = rapidjson::StringRef(name.data(), name.size());
   const auto i = paramsMember().FindMember(nameRef);
@@ -35,6 +39,16 @@ const rapidjson::Value& ClientRequest::getParameter(const std::string_view name)
     return core::NullJsonValue;
   } else
     return i->value;
+}
+
+int32_t ClientRequest::getIntParameter(const std::string_view name) const noexcept {
+  const auto nameRef = rapidjson::StringRef(name.data(), name.size());
+  const auto i = paramsMember().FindMember(nameRef);
+  const auto e = paramsMember().MemberEnd();
+  if (i == e) {
+    return 0;
+  } else
+    return i->value.GetInt();
 }
 
 void ClientRequest::read(const char *message) {
@@ -55,6 +69,8 @@ void ClientRequest::read(const char *message) {
     method = i2->value.GetInt();
   }
 }
+ClientRequest::ClientRequest(){}
+ClientRequest::~ClientRequest(){}
 
 
 void ServerResponse::init(const int methodCode, const int seqValue) {
@@ -67,4 +83,7 @@ void ServerResponse::init(const int methodCode, const int seqValue) {
   document.AddMember("method", rapidjson::Value{methodCode}, alloc);
   document.AddMember("params", std::move(params), alloc);
 
+}
+ServerResponse::ServerResponse(const int32_t methodCode){
+  ServerResponse::init(methodCode, 1);
 }

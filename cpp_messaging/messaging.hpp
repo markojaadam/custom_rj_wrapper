@@ -5,8 +5,6 @@
 #ifndef CPP_JSONTEST_BASICS_HPP
 #define CPP_JSONTEST_BASICS_HPP
 
-#endif // CPP_JSONTEST_BASICS_HPP
-
 #include "rapidjson.hpp"
 
 template <class Encoding, class Allocator>
@@ -31,10 +29,12 @@ static void setMember(rapidjson::Value &node, const std::string_view name,
 
 class ServerResponse {
 public:
-  int method;
-  int seq;
+  int method{};
+  int seq{};
   rapidjson::Document document;
+  explicit ServerResponse(int32_t methodCode);
   void setParameter(std::string param, rapidjson::Value value);
+  void setIntParameter(std::string param, int32_t intValue);
   void init(int methodCode, int seqValue);
 
 private:
@@ -42,15 +42,21 @@ private:
   const rapidjson::Value &paramsMember() const noexcept;
 };
 
+
 class ClientRequest {
 public:
+  ClientRequest();
+  ~ClientRequest();
   rapidjson::Document document;
   int method;
   int seq;
   const rapidjson::Value &getParameter(std::string_view name) const noexcept;
+  int32_t getIntParameter(std::string_view name) const noexcept;
   void read(const char *message);
 
 private:
   rapidjson::Value &paramsMember() noexcept;
   const rapidjson::Value &paramsMember() const noexcept;
 };
+
+#endif // CPP_JSONTEST_BASICS_HPP
