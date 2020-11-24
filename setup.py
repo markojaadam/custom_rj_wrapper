@@ -1,3 +1,3 @@
 from skbuild import setup
 
-setup(packages=['messaging'])
+setup(packages=['messaging', 'bench'])

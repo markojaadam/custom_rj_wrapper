@@ -1,4 +1,4 @@
-from messaging.messaging import (
+from bench.bench import (
     test_parse_pythread,
     test_parse_omp,
     test_parse_tpe,
