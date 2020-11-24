@@ -32,10 +32,11 @@ public:
   int method{};
   int seq{};
   rapidjson::Document document;
-  explicit ServerResponse(int32_t methodCode);
+  explicit ServerResponse(int methodCode);
   void setParameter(std::string param, rapidjson::Value value);
-  void setIntParameter(std::string param, int32_t intValue);
+  void setIntParameter(std::string param, int intValue);
   void init(int methodCode, int seqValue);
+  std::string dump();
 
 private:
   rapidjson::Value &paramsMember() noexcept;

@@ -37,6 +37,28 @@ cdef class PyRequest:
             self.read(message)
             self.getIntParameter(test_param)
 
+@cython.final
+cdef class PyResponse:
+    def __cinit__(self, int method):
+        self.thisptr = new c_messaging.ServerResponse(method)
+
+    def __dealloc__(self):
+        del self.thisptr
+
+    cpdef string dump(self) nogil:
+        return self.thisptr.dump()
+
+    cpdef void setIntParameter(self, string name, int value) nogil:
+        self.thisptr.setIntParameter(name, value)
+
+    @property
+    def method(self):
+        return deref(&self.thisptr.method)
+
+    @property
+    def seq(self):
+        return deref(&self.thisptr.seq)
+
 #############################################
 ################ TEST MODULE ################
 #############################################
@@ -165,3 +187,10 @@ def test_parse_omp(int n_cycles, int n_workers):
         omp_worker(worker_run, testdata, test_param)
     elapsed = time.time() - start_time
     return elapsed
+
+
+def response_test():
+    cdef int metcode = 10000
+    resp = PyResponse(metcode)
+    resp.setIntParameter(b"test_param_1", 10)
+    print(resp.dump())

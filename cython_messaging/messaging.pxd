@@ -10,3 +10,11 @@ cdef class PyRequest():
     cpdef int seq
     cpdef void read(self, const char *message) nogil
     cpdef int getIntParameter(self, string name) nogil
+
+@cython.final
+cdef class PyResponse():
+    cdef c_messaging.ServerResponse *thisptr
+    cpdef int method
+    cpdef int seq
+    cpdef string dump(self) nogil
+    cpdef void setIntParameter(self, string name, int value) nogil
