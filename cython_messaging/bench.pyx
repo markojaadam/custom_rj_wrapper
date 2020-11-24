@@ -1,15 +1,6 @@
 from libcpp.string cimport string
 from cython.parallel import parallel, prange
 cimport c_messaging
-
-import time
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-#############################################
-################ TEST MODULE ################
-#############################################
-
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
