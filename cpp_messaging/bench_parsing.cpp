@@ -43,12 +43,12 @@ int main() {
   auto start = high_resolution_clock::now();
   int n_cycles = 1000000;
 
+  ClientRequest request;
   for (int i = 1; i < n_cycles; i++) {
-    ClientRequest request;
     request.read(msg);
-    request.getParameter("test_param_1");
-    request.getParameter("test_param_2");
-    request.getParameter("test_param_3");
+//    request.getParameter("test_param_1");
+//    request.getParameter("test_param_2");
+    request.getParameter("test_param_4");
   }
 
   auto stop = high_resolution_clock::now();
