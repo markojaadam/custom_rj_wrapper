@@ -10,7 +10,8 @@ cimport openmp
 @cython.final
 cdef class PyRequest:
     def __cinit__(self):
-        self.thisptr = new c_messaging.ClientRequest()
+        with nogil:
+            self.thisptr = new c_messaging.ClientRequest()
 
     def __dealloc__(self):
         del self.thisptr
@@ -40,7 +41,8 @@ cdef class PyRequest:
 @cython.final
 cdef class PyResponse:
     def __cinit__(self, int method):
-        self.thisptr = new c_messaging.ServerResponse(method)
+        with nogil:
+            self.thisptr = new c_messaging.ServerResponse(method)
 
     def __dealloc__(self):
         del self.thisptr
@@ -65,16 +67,9 @@ cdef class PyResponse:
 
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-cdef void omp_worker(int cycles, string testdata, string test_param) nogil:
-    with gil:
-        req = PyRequest()
-    for i in range(cycles):
-        req.read(testdata.c_str())
-        req.getIntParameter(test_param)
-
-def py_worker(int cycles):
-    cdef string testdata = b"""{
+cdef string TEST_RAW = b"""{
         "method": 10000,
             "seq": 3,
             "params": {
@@ -108,18 +103,79 @@ def py_worker(int cycles):
           }
         }
       }"""
-    cdef string test_param = b"test_param_4"
-    cdef PyRequest req = PyRequest()
+
+cdef const char *TEST_DATA = TEST_RAW.c_str()
+
+cdef string TEST_PARAM = b"test_param_4"
+
+
+cdef void parse_test() nogil:
+    req = new c_messaging.ClientRequest()
+    req.read(TEST_DATA)
+    req.getIntParameter(TEST_PARAM)
+
+
+cdef void construct_test() nogil:
+    resp = new c_messaging.ServerResponse(10000)
+    resp.setIntParameter(TEST_PARAM, 10)
+    resp.dump()
+
+def parse_py_worker(int cycles):
     with nogil:
         for i in range(cycles):
-            req.read(testdata.c_str())
-            req.getIntParameter(test_param)
+            parse_test()
+
+cdef void parse_omp_worker(int cycles) nogil:
+    for i in range(cycles):
+        parse_test()
+
+def construct_py_worker(int cycles):
+    with nogil:
+        for i in range(cycles):
+            construct_test()
+
+cdef void construct_omp_worker(int cycles) nogil:
+    for i in range(cycles):
+        construct_test()
 
 def test_parse_pythread(int n_cycles, int n_workers):
     start_time = time.time()
     threads = []
     for i in range(n_workers):
-        t = threading.Thread(target=py_worker, args=[int(n_cycles / n_workers)], daemon=True)
+        t = threading.Thread(target=parse_py_worker, args=[int(n_cycles / n_workers)], daemon=True)
+        threads.append(t)
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    elapsed = time.time() - start_time
+    return elapsed
+
+
+def test_parse_tpe(int n_cycles, int n_workers):
+    start_time = time.time()
+    cdef int worker_run = int(n_cycles / n_workers)
+    with ThreadPoolExecutor(max_workers=n_workers) as executor:
+        futures = []
+        for i in range(n_workers):
+            futures.append(executor.submit(parse_py_worker, int(n_cycles / n_workers)))
+        as_completed(futures)
+    elapsed = time.time() - start_time
+    return elapsed
+
+def test_parse_omp(int n_cycles, int n_workers):
+    cdef int worker_run = int(n_cycles / n_workers)
+    start_time = time.time()
+    with nogil, parallel(num_threads=n_workers):
+        parse_omp_worker(worker_run)
+    elapsed = time.time() - start_time
+    return elapsed
+
+def test_construct_pythread(int n_cycles, int n_workers):
+    start_time = time.time()
+    threads = []
+    for i in range(n_workers):
+        t = threading.Thread(target=construct_py_worker, args=[int(n_cycles / n_workers)], daemon=True)
         threads.append(t)
 
     for t in threads:
@@ -130,67 +186,22 @@ def test_parse_pythread(int n_cycles, int n_workers):
     elapsed = time.time() - start_time
     return elapsed
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-def test_parse_tpe(int n_cycles, int n_workers):
+def test_construct_tpe(int n_cycles, int n_workers):
     start_time = time.time()
     cdef int worker_run = int(n_cycles / n_workers)
     with ThreadPoolExecutor(max_workers=n_workers) as executor:
         futures = []
         for i in range(n_workers):
-            futures.append(executor.submit(py_worker, int(n_cycles / n_workers)))
+            futures.append(executor.submit(construct_py_worker, int(n_cycles / n_workers)))
         as_completed(futures)
-        # print(future.result())
     elapsed = time.time() - start_time
     return elapsed
 
-def test_parse_omp(int n_cycles, int n_workers):
-    cdef string testdata = b"""{
-        "method": 10000,
-            "seq": 3,
-            "params": {
-          "test_param_1": false,
-              "test_param_2": null,
-              "test_param_3": "what",
-              "test_param_4": 4,
-              "test_param_5": [
-          1111,
-              2222,
-              3333
-          ],
-          "test_param_6": [
-          false,
-              true,
-              false
-          ],
-          "test_param_7": [
-          "aaa",
-              "bbb",
-              "ccc"
-          ],
-          "test_param_8": {
-            "sub_param_1": 1,
-                "sub_param_2": "blah",
-                "nested_sub_param": {
-              "nested1": "nested",
-                  "nested2": 1,
-                  "nestedList": [1, 2, 3]
-            }
-          }
-        }
-      }"""
-    cdef string test_param = b"test_param_4"
-    cdef int num_threads
-    cdef int i
+
+def test_construct_omp(int n_cycles, int n_workers):
     cdef int worker_run = int(n_cycles / n_workers)
     start_time = time.time()
     with nogil, parallel(num_threads=n_workers):
-        omp_worker(worker_run, testdata, test_param)
+        construct_omp_worker(worker_run)
     elapsed = time.time() - start_time
     return elapsed
-
-
-def response_test():
-    cdef int metcode = 10000
-    resp = PyResponse(metcode)
-    resp.setIntParameter(b"test_param_1", 10)
-    print(resp.dump())

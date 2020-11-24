@@ -7,11 +7,10 @@ int main() {
 
   using namespace std::chrono;
   auto start = high_resolution_clock::now();
-//  int n_cycles = 1000000;
-  int n_cycles = 1;
+  int n_cycles = 1000000;
+//  int n_cycles = 1;
   for (int i = 1; i < n_cycles; i++) {
-    rapidjson::Document doc{rapidjson::Type::kObjectType};
-    auto response = ServerResponse{10000};
+    auto response = ServerResponse(10000);
     response.setIntParameter("blahInt", 1);
     response.setParameter("blah", rapidjson::Value("a"));
     response.setParameter("blah2", rapidjson::Value(false));
