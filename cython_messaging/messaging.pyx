@@ -113,12 +113,14 @@ cdef void parse_test() nogil:
     req = new c_messaging.ClientRequest()
     req.read(TEST_DATA)
     req.getIntParameter(TEST_PARAM)
+    del req
 
 
 cdef void construct_test() nogil:
     resp = new c_messaging.ServerResponse(10000)
     resp.setIntParameter(TEST_PARAM, 10)
     resp.dump()
+    del resp
 
 def parse_py_worker(int cycles):
     with nogil:
