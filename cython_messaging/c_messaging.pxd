@@ -6,7 +6,7 @@ cdef extern from "messaging.hpp":
         int method
         int seq
         void read(const char *message) nogil
-        Value getParameter(string name) nogil
+        RJValue getParameter(string name) nogil
         int getIntParameter(string name) nogil
 
     cdef cppclass ServerResponse:
@@ -17,11 +17,11 @@ cdef extern from "messaging.hpp":
         int setIntParameter(string name, int value) nogil
 
 cdef extern from "rapidjson.hpp" namespace "rapidjson":
-    cdef cppclass Value:
+    cdef cppclass RJValue "Value":
         Value() nogil
 
-    cdef cppclass GenericValue:
+    cdef cppclass RJGenValue "GenericValue":
         GenericValue() nogil
 
 cdef extern from "conversions.hpp" namespace "core":
-    cdef ToType to[ToType](Value value) nogil
+    cdef ToType to[ToType](RJValue value) nogil
