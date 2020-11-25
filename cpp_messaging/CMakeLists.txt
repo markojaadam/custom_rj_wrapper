@@ -10,7 +10,7 @@ include_directories(BEFORE "${RAPIDJSON_INCLUDE_DIR}")
 add_definitions(-DRAPIDJSON_HAS_STDSTRING)
 set(rapidjson_src rapidjson.hpp)
 
-set (SRC messaging.cpp messaging.hpp)
+set (SRC messaging.cpp messaging.hpp conversions.hpp)
 add_library(cpp-module-static STATIC ${SRC})
 
 add_executable(bench_parsing bench_parsing.cpp)

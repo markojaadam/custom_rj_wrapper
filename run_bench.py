@@ -12,9 +12,6 @@ n_cycles = 1000000
 def bench_print_result(elapsed, n_workers, n_cycles):
     print("Number of workers: %s\t Elapsed: %.2f sec\t%.0d ns/op" % (n_workers, elapsed, (elapsed / n_cycles * 10 ** 9)))
 
-# print("\n################ Response test ################")
-# response_test()
-
 print("\n################ Python thread test ################")
 print("################ Parsing ################")
 for n_workers in range(1, 11):

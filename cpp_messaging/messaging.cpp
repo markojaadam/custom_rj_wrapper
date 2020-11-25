@@ -4,6 +4,7 @@
 
 #include "messaging.hpp"
 #include "rapidjson.hpp"
+#include "conversions.hpp"
 
 rapidjson::Value &ServerResponse::paramsMember() noexcept {
   return const_cast<rapidjson::Value &>(
@@ -44,13 +45,7 @@ ClientRequest::getParameter(const std::string_view name) const noexcept {
 }
 
 int ClientRequest::getIntParameter(const std::string_view name) const noexcept {
-  const auto nameRef = rapidjson::StringRef(name.data(), name.size());
-  const auto i = paramsMember().FindMember(nameRef);
-  const auto e = paramsMember().MemberEnd();
-  if (i == e) {
-    return 0;
-  } else
-    return i->value.GetInt();
+  return core::to<int>(getParameter(name));
 }
 
 void ClientRequest::read(const char *message) {
@@ -87,4 +82,4 @@ void ServerResponse::init(const int methodCode, const int seqValue) {
 ServerResponse::ServerResponse(const int methodCode) {
   ServerResponse::init(methodCode, 1);
 }
-std::string ServerResponse::dump() { return toJsonString(document); }
+std::string ServerResponse::dump() { return core::toJsonString(document); }

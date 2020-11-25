@@ -1,4 +1,6 @@
 from libcpp.string cimport string
+from libc.stdio cimport printf
+cimport cython
 from cython.parallel import parallel, prange
 cimport c_messaging
 import time
@@ -44,15 +46,53 @@ cdef const char *TEST_DATA = TEST_RAW.c_str()
 
 cdef string TEST_PARAM = b"test_param_4"
 
+cdef void _conversion_test() nogil:
+    req = new c_messaging.ClientRequest()
+    req.read(TEST_DATA)
+    cdef int ret1 = c_messaging.to[int](req.getParameter(TEST_PARAM))
+    with gil:
+        ret2 = c_messaging.to[string](req.getParameter(b"test_param_3"))
+        print(ret1)
+        print(ret2)
+    del req
 
-cdef void parse_test() nogil:
+def conversion_test():
+    with nogil:
+        _conversion_test()
+
+cdef void _parse_test() nogil:
+    req = new c_messaging.ClientRequest()
+    req.read(TEST_DATA)
+    with gil:
+        result = req.getIntParameter(TEST_PARAM)
+        print(result)
+    del req
+
+
+cdef void _construct_test() nogil:
+    resp = new c_messaging.ServerResponse(10000)
+    resp.setIntParameter(TEST_PARAM, 10)
+    with gil:
+        print(resp.dump())
+    del resp
+
+def parse_test():
+    with nogil:
+        _parse_test()
+
+def construct_test():
+    with nogil:
+        _construct_test()
+
+
+cdef void parse_bench_unit() nogil:
     req = new c_messaging.ClientRequest()
     req.read(TEST_DATA)
     req.getIntParameter(TEST_PARAM)
     del req
 
 
-cdef void construct_test() nogil:
+cdef void construct_bench_unit() nogil:
     resp = new c_messaging.ServerResponse(10000)
     resp.setIntParameter(TEST_PARAM, 10)
     resp.dump()
@@ -61,20 +101,20 @@ cdef void construct_test() nogil:
 def parse_py_worker(int cycles):
     with nogil:
         for i in range(cycles):
-            parse_test()
+            parse_bench_unit()
 
 cdef void parse_omp_worker(int cycles) nogil:
     for i in range(cycles):
-        parse_test()
+        parse_bench_unit()
 
 def construct_py_worker(int cycles):
     with nogil:
         for i in range(cycles):
-            construct_test()
+            construct_bench_unit()
 
 cdef void construct_omp_worker(int cycles) nogil:
     for i in range(cycles):
-        construct_test()
+        construct_bench_unit()
 
 def test_parse_pythread(int n_cycles, int n_workers):
     start_time = time.time()

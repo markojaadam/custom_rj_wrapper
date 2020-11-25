@@ -6,15 +6,8 @@
 #define CPP_JSONTEST_BASICS_HPP
 
 #include "rapidjson.hpp"
+#include "conversions.hpp"
 
-template <class Encoding, class Allocator>
-std::string
-toJsonString(const rapidjson::GenericValue<Encoding, Allocator> &value) {
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
-  value.Accept(writer);
-  return std::string{buffer.GetString(), buffer.GetSize()};
-}
 
 template <class Allocator>
 static void setMember(rapidjson::Value &node, const std::string_view name,
